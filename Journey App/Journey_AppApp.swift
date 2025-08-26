@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct Journey_AppApp: App {
+    @StateObject private var auth = AuthService()
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environmentObject(auth)
         }
     }
 }
