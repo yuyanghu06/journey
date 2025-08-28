@@ -102,7 +102,10 @@ router.post('/refresh', (req, res) => {
   console.log('[POST /auth/refresh] Incoming:', req.body);
   try {
     const { userId, refreshToken } = req.body || {};
-    if (!userId || !refreshToken) return res.status(400).json({ error: 'Missing fields' });
+    if (!userId || !refreshToken) {
+      console.error('[POST /auth/refresh] Error: Missing fields', { userId, refreshToken });
+      return res.status(400).json({ error: 'Missing fields' });
+    }
 
     const hash = sha256(refreshToken);
     const record = db.getRefreshByHash(hash);
@@ -115,12 +118,17 @@ router.post('/refresh', (req, res) => {
     if (!record || isExpired || isRevoked || userMismatch) {
       // defensive: revoke all for user if we can identify (reuse detection scenario)
       if (record && record.user_id) {
+        console.error('[POST /auth/refresh] Error: Invalid refresh token', {
+          record, isExpired, isRevoked, userMismatch
+        });
+        console.log('[POST /auth/refresh] Calling revokeAllForUser');
         db.revokeAllForUser(record.user_id);
       }
       return res.status(401).json({ error: 'Invalid refresh token' });
     }
 
     // rotate: revoke old, issue new
+    console.log('[POST /auth/refresh] Calling revokeByHash');
     db.revokeByHash(hash);
 
     const newRaw = randomTokenRaw();
@@ -155,6 +163,7 @@ router.post('/logout', (req, res) => {
     const { refreshToken } = req.body || {};
     if (!refreshToken) return res.status(400).json({ error: 'Missing refreshToken' });
     const hash = sha256(refreshToken);
+    console.log('[POST /auth/logout] Calling revokeByHash');
     db.revokeByHash(hash);
     console.log('[POST /auth/logout] Success');
     return res.json({ ok: true });

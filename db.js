@@ -124,7 +124,11 @@ module.exports = {
     stmtInsertRefresh.run(id, userId, tokenHash, expiresAtISO);
   },
   getRefreshByHash(tokenHash) { return stmtGetRefreshByHash.get(tokenHash) || null; },
-  revokeByHash(tokenHash) { stmtRevokeByHash.run(tokenHash); },
+  revokeByHash(tokenHash) {
+    const revokeTime = new Date().toISOString();
+    console.log(`[db.revokeByHash] Revoking token ${tokenHash} at ${revokeTime}`);
+    stmtRevokeByHash.run(tokenHash);
+  },
   revokeAllForUser(userId) { stmtRevokeAllForUser.run(userId); },
 
   // chat logs
