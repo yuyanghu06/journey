@@ -12,6 +12,9 @@ struct ChatView: View {
     @EnvironmentObject var auth: AuthService
     
     init(auth: AuthService) {
+        Task{
+            auth.startTokenRefresher()
+        }
             _viewModel = StateObject(wrappedValue: ChatViewModel(auth: auth))
         }
     
@@ -84,6 +87,18 @@ struct ChatView: View {
                     .font(.title2)
                     .padding(8)
             }
+            
+            Button {
+                Task{
+                    await auth.logout()
+                    _ = RootView()
+                }
+            } label: {
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                    .font(.title2)
+                    .padding(8)
+            }
+            .buttonStyle(.plain)
             
             //MARK: Calendar Loading Logic
             Button {

@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CryptoKit
 
 struct API {
     static let base = URL(string: "https://yourjourney.it.com")! // <- set this
@@ -164,6 +165,8 @@ final class AuthService: ObservableObject {
         let (data, resp) = try await URLSession.shared.data(for: req)
         guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+            let bodyString = String(data: data, encoding: .utf8) ?? "unable to decode body"
+            print("POST Error: status=\(code), body=\(bodyString)")
             throw HTTPError(status: code, data: data)
         }
         return (try JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
@@ -171,7 +174,7 @@ final class AuthService: ObservableObject {
 
     // MARK: - Token refresh (manual + periodic)
 
-    private func refreshTokens() async throws {
+    public func refreshTokens() async throws {
         guard
           let uid = Keychain.get(AuthKeys.userId).flatMap({ String(data:$0, encoding:.utf8) }),
           let refresh = Keychain.get(AuthKeys.refresh).flatMap({ String(data:$0, encoding:.utf8) })
@@ -183,13 +186,16 @@ final class AuthService: ObservableObject {
           let tokens = resp["tokens"] as? [String: Any],
           let newAccess = tokens["accessToken"] as? String,
           let newRefresh = tokens["refreshToken"] as? String
-        else { throw URLError(.cannotParseResponse) }
+        else {
+            print("Error parsing refresh response: \(resp)")
+            throw URLError(.cannotParseResponse)
+        }
 
         _ = Keychain.set(Data(newAccess.utf8), for: AuthKeys.access)
         _ = Keychain.set(Data(newRefresh.utf8), for: AuthKeys.refresh)
     }
 
-    private func startTokenRefresher() {
+    public func startTokenRefresher() {
         stopTokenRefresher()
         // refresh slightly before 15 minutes (e.g., every 14m)
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 14 * 60, repeats: true) { [weak self] _ in

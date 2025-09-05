@@ -29,12 +29,13 @@ struct DayDetailView: View {
         return f.string(from: date)
     }
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 16) {
             Text(title)
                 .font(.title2)
                 .bold()
                 .padding(.top)
             Text(displaySummary)
+                .multilineTextAlignment(.leading)
                 .foregroundStyle(.secondary)
             
             Spacer()
