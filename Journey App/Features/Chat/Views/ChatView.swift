@@ -6,14 +6,10 @@ import SwiftUI
 // persistent history, typing indicator, and a pill-shaped input bar.
 
 struct ChatView: View {
-    @StateObject private var viewModel: ChatViewModel
+    @StateObject private var viewModel = ChatViewModel()
     @FocusState  private var inputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var auth: AuthService
-
-    init(viewModel: ChatViewModel = ChatViewModel()) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-    }
 
     var body: some View {
         Group {
