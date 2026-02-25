@@ -3,6 +3,7 @@ openai-api-key.txt
 CertificateSigningRequest.certSigningRequest
 .env
 .env.*
+.github
 
 # Node / backend
 /backend
