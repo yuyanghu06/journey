@@ -13,5 +13,5 @@ COPY --from=builder /app/prisma ./prisma
 RUN npm ci && npx prisma generate
 COPY --from=builder /app/dist ./dist
 COPY start.sh ./start.sh
-EXPOSE 3000
+EXPOSE 8080
 CMD ["sh", "start.sh"]
