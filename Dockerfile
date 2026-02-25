@@ -1,9 +1,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 COPY . .
-RUN npm run build
+RUN npx prisma generate && npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
