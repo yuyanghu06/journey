@@ -22,8 +22,8 @@ async function bootstrap() {
   );
 
   const port = process.env.PORT ?? 3000;
-  await app.listen(port);
-  console.log(`Journey backend listening on port ${port}`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`Journey backend listening on 0.0.0.0:${port}`);
 }
 
 bootstrap();
