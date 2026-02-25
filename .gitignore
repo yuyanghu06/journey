@@ -5,6 +5,7 @@ CertificateSigningRequest.certSigningRequest
 .env.*
 
 # Node / backend
+/backend
 node_modules/
 dist/
 build/
