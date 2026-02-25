@@ -12,6 +12,7 @@ COPY package*.json ./
 COPY --from=builder /app/prisma ./prisma
 RUN npm ci && npx prisma generate
 COPY --from=builder /app/dist ./dist
+COPY prompts ./prompts
 COPY start.sh ./start.sh
 EXPOSE 8080
 CMD ["sh", "start.sh"]

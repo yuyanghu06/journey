@@ -1,4 +1,6 @@
 import { Injectable, ServiceUnavailableException, Logger } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 import OpenAI from 'openai';
 
 export interface AiMessage {
@@ -9,23 +11,22 @@ export interface AiMessage {
 // Maximum characters to feed into the context window before truncation
 const MAX_CONTEXT_CHARS = 24_000;
 
-const CHAT_SYSTEM_PROMPT = `You are Journey — a calm, reflective AI companion. Your role is to help the user \
-process their thoughts and feelings through gentle, open-ended conversation. \
-Be warm, brief, and curious. Never give advice unless asked. Never judge. \
-Always respond in 1–3 short sentences.`;
-
-const JOURNAL_SYSTEM_PROMPT = `You are a thoughtful journaling assistant. \
-Write a single reflective journal entry in first person (2–4 sentences) \
-that captures the emotional essence of the conversation below. \
-Use a calm, personal tone. Do not invent events not mentioned.`;
+function loadPrompt(filename: string): string {
+  const filePath = path.join(process.cwd(), 'prompts', filename);
+  return fs.readFileSync(filePath, 'utf-8').trim();
+}
 
 @Injectable()
 export class AiService {
   private readonly client: OpenAI;
   private readonly logger = new Logger(AiService.name);
+  private readonly chatSystemPrompt: string;
+  private readonly journalSystemPrompt: string;
 
   constructor() {
     this.client = new OpenAI({ apiKey: process.env.AI_PROVIDER_KEY });
+    this.chatSystemPrompt = loadPrompt('chat.txt');
+    this.journalSystemPrompt = loadPrompt('journal.txt');
   }
 
   /**
@@ -35,7 +36,7 @@ export class AiService {
   async chat(messages: AiMessage[]): Promise<string> {
     const trimmed = this.truncateMessages(messages);
     const payload: AiMessage[] = [
-      { role: 'system', content: CHAT_SYSTEM_PROMPT },
+      { role: 'system', content: this.chatSystemPrompt },
       ...trimmed,
     ];
 
@@ -48,7 +49,7 @@ export class AiService {
    */
   async summarise(conversationText: string): Promise<string> {
     const payload: AiMessage[] = [
-      { role: 'system', content: JOURNAL_SYSTEM_PROMPT },
+      { role: 'system', content: this.journalSystemPrompt },
       { role: 'user', content: `Conversation:\n${conversationText}` },
     ];
 
