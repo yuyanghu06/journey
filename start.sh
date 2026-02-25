@@ -2,4 +2,4 @@
 set -e
 
 npx prisma migrate deploy
-exec npm run start
+exec node dist/main
