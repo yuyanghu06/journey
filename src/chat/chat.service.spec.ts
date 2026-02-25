@@ -100,7 +100,8 @@ describe('ChatService', () => {
       mockMessage('user', 'First'),
       mockMessage('assistant', 'Reply'),
     ];
-    repo.getByDayKey.mockResolvedValue(prior);
+    // Simulate DB returning all 3 messages after the user message is persisted
+    repo.getByDayKey.mockResolvedValue([...prior, mockMessage('user', 'Second')]);
 
     await service.sendMessage({ dayKey: '2026-02-25', userText: 'Second' }, null);
 

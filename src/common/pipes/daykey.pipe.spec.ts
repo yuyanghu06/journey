@@ -1,4 +1,4 @@
-import { DayKeyPipe } from '../common/pipes/daykey.pipe';
+import { DayKeyPipe } from './daykey.pipe';
 import { BadRequestException } from '@nestjs/common';
 
 describe('DayKeyPipe', () => {
