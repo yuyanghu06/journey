@@ -1,4 +1,46 @@
+# Secrets / local sensitive files
 openai-api-key.txt
 CertificateSigningRequest.certSigningRequest
-.github
 .env
+.env.*
+
+# Node / backend
+node_modules/
+dist/
+build/
+coverage/
+logs
+*.log
+
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Swift / Xcode frontend
+DerivedData/
+build/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# Fastlane / signing artifacts
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# Temporary files
+*.swp
+*.swo
+.tmp/
+temp/
