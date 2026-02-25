@@ -81,7 +81,7 @@ struct ChatView: View {
         }
         .padding(.horizontal, DS.Spacing.md)
         .padding(.vertical,   DS.Spacing.sm)
-        .background(DS.Colors.surface.shadow(color: DS.Shadow.color, radius: 6, y: 2))
+        .background(DS.Colors.surface.ignoresSafeArea(edges: .top).shadow(color: DS.Shadow.color, radius: 6, y: 2))
     }
 
     /// Small circular icon button used in the header toolbar.
@@ -147,7 +147,7 @@ struct ChatView: View {
             }
             .padding(.horizontal, DS.Spacing.md)
             .padding(.vertical,   DS.Spacing.sm)
-            .background(DS.Colors.surface)
+            .background(DS.Colors.surface.ignoresSafeArea(edges: .bottom))
         }
     }
 

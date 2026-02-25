@@ -45,30 +45,43 @@ final class ChatViewModel: ObservableObject {
 
     // MARK: - Load
 
-    /// Fetches today's messages from the backend, falling back to a local welcome
-    /// message when the backend is unreachable or the day has no history yet.
+    /// Fetches today's messages from the backend, falling back to local storage.
+    /// A welcome message is only seeded when the backend confirms no history exists
+    /// (not on network failure, to avoid showing welcome when history is present).
     private func loadTodayConversation() {
         isLoadingHistory = true
         Task {
-            if let dayData = try? await APIClient.shared.get(
-                "/days/\(dayKey.rawValue)",
-                responseType: DayDataResponse.self
-            ), !dayData.conversation.messages.isEmpty {
-                let fetched = dayData.conversation.messages.map { $0.toMessage() }
-                await conversationRepository.setMessages(fetched, dayKey: dayKey)
-                messages = fetched
-            } else {
-                // No backend history — check local store, then seed with welcome message.
+            var backendSucceeded = false
+
+            do {
+                let dayData = try await APIClient.shared.get(
+                    "/days/\(dayKey.rawValue)",
+                    responseType: DayDataResponse.self
+                )
+                backendSucceeded = true
+                if !dayData.conversation.messages.isEmpty {
+                    let fetched = dayData.conversation.messages.map { $0.toMessage() }
+                    await conversationRepository.setMessages(fetched, dayKey: dayKey)
+                    messages = fetched
+                }
+            } catch {
+                // Network unavailable — fall through to local check below.
+            }
+
+            if messages.isEmpty {
                 let local = await conversationRepository.fetchConversation(dayKey: dayKey)
                 if local.messages.isEmpty {
-                    let welcome = Message(
-                        dayKey: dayKey,
-                        role: .assistant,
-                        text: "Hey! How's your day going so far?",
-                        status: .delivered
-                    )
-                    await conversationRepository.appendMessage(welcome, dayKey: dayKey)
-                    messages = [welcome]
+                    // Only seed the welcome message when backend confirmed the day is fresh.
+                    if backendSucceeded {
+                        let welcome = Message(
+                            dayKey: dayKey,
+                            role: .assistant,
+                            text: "Hey! How's your day going so far?",
+                            status: .delivered
+                        )
+                        await conversationRepository.appendMessage(welcome, dayKey: dayKey)
+                        messages = [welcome]
+                    }
                 } else {
                     messages = local.messages
                 }
