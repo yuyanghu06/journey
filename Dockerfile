@@ -1,10 +1,8 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache openssl
-COPY package*.json ./
-COPY prisma ./prisma
-RUN npm ci
 COPY . .
+RUN npm ci
 RUN npm run build
 
 FROM node:20-alpine AS runner
