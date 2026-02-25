@@ -30,17 +30,17 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		263B4E012E56398A00EBCE8A /* Journey App */ = {
+		263B4E012E56398A00EBCE8A /* JourneyApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = JourneyApp;
 			sourceTree = "<group>";
 		};
-		263B4E0F2E56398B00EBCE8A /* Journey AppTests */ = {
+		263B4E0F2E56398B00EBCE8A /* JourneyAppTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = JourneyAppTests;
 			sourceTree = "<group>";
 		};
-		263B4E192E56398B00EBCE8A /* Journey AppUITests */ = {
+		263B4E192E56398B00EBCE8A /* JourneyAppUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = JourneyAppUITests;
 			sourceTree = "<group>";
@@ -75,9 +75,9 @@
 		263B4DF62E56398A00EBCE8A = {
 			isa = PBXGroup;
 			children = (
-				263B4E012E56398A00EBCE8A /* Journey App */,
-				263B4E0F2E56398B00EBCE8A /* Journey AppTests */,
-				263B4E192E56398B00EBCE8A /* Journey AppUITests */,
+				263B4E012E56398A00EBCE8A /* JourneyApp */,
+				263B4E0F2E56398B00EBCE8A /* JourneyAppTests */,
+				263B4E192E56398B00EBCE8A /* JourneyAppUITests */,
 				263B4E002E56398A00EBCE8A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -108,7 +108,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				263B4E012E56398A00EBCE8A /* Journey App */,
+				263B4E012E56398A00EBCE8A /* JourneyApp */,
 			);
 			name = "Journey App";
 			packageProductDependencies = (
@@ -131,7 +131,7 @@
 				263B4E0E2E56398B00EBCE8A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				263B4E0F2E56398B00EBCE8A /* Journey AppTests */,
+				263B4E0F2E56398B00EBCE8A /* JourneyAppTests */,
 			);
 			name = "Journey AppTests";
 			packageProductDependencies = (
@@ -154,7 +154,7 @@
 				263B4E182E56398B00EBCE8A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				263B4E192E56398B00EBCE8A /* Journey AppUITests */,
+				263B4E192E56398B00EBCE8A /* JourneyAppUITests */,
 			);
 			name = "Journey AppUITests";
 			packageProductDependencies = (
@@ -186,7 +186,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 263B4DFA2E56398A00EBCE8A /* Build configuration list for PBXProject "Journey App" */;
+			buildConfigurationList = 263B4DFA2E56398A00EBCE8A /* Build configuration list for PBXProject "JourneyApp" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -519,7 +519,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		263B4DFA2E56398A00EBCE8A /* Build configuration list for PBXProject "Journey App" */ = {
+		263B4DFA2E56398A00EBCE8A /* Build configuration list for PBXProject "JourneyApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				263B4E1E2E56398B00EBCE8A /* Debug */,

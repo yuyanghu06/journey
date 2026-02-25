@@ -35,7 +35,7 @@ final class BugReportService: BugReportServiceProtocol {
 
     /// Posts the bug report to POST /bugs/report.
     func submitReport(description: String) async throws {
-        guard let url = URL(string: "https://yourjourney.it.com/bugs/report") else {
+        guard let url = URL(string: "https://journey-production-47d5.up.railway.app/bugs/report") else {
             throw BugReportError.invalidURL
         }
 

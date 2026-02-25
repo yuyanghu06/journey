@@ -41,20 +41,37 @@ final class DayDetailViewModel: ObservableObject {
 
     // MARK: - Load
 
-    /// Fetches both the journal entry and conversation for the day in parallel.
+    /// Fetches the conversation and journal entry for the day from the backend.
+    /// Falls back to local repositories if the backend is unreachable.
+    /// Auto-generates a journal entry if the day has messages but no entry yet.
     func loadData() async {
         isLoadingJournal      = true
         isLoadingConversation = true
         errorMessage          = nil
 
-        async let entry        = journalRepository.fetchJournalEntry(dayKey: dayKey)
-        async let conversation = conversationRepository.fetchConversation(dayKey: dayKey)
+        if let dayData = try? await APIClient.shared.get(
+            "/days/\(dayKey.rawValue)",
+            responseType: DayDataResponse.self
+        ) {
+            let msgs = dayData.conversation.messages.map { $0.toMessage() }
+            self.conversation = msgs.isEmpty ? nil : DayConversation(dayKey: dayKey, messages: msgs)
+            journalEntry      = dayData.journalEntry?.toJournalEntry()
+        } else {
+            // Fallback: read from local in-memory repositories.
+            async let entry = journalRepository.fetchJournalEntry(dayKey: dayKey)
+            async let conv  = conversationRepository.fetchConversation(dayKey: dayKey)
+            let (j, c) = await (entry, conv)
+            journalEntry      = j
+            self.conversation = c.messages.isEmpty ? nil : c
+        }
 
-        let (j, c) = await (entry, conversation)
-        journalEntry  = j
-        self.conversation = c.messages.isEmpty ? nil : c
         isLoadingJournal      = false
         isLoadingConversation = false
+
+        // Auto-generate a journal entry when the day has messages but no entry yet.
+        if journalEntry == nil, self.conversation != nil {
+            await generateJournalEntry()
+        }
     }
 
     // MARK: - Generate / Regenerate

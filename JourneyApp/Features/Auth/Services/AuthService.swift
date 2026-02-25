@@ -18,7 +18,7 @@ final class AuthService: ObservableObject {
     // MARK: - Private
 
     private var refreshTimer: Timer?
-    private let baseURL = URL(string: "https://yourjourney.it.com")!
+    private let baseURL = URL(string: "https://journey-production-47d5.up.railway.app")!
 
     // MARK: - Init
 

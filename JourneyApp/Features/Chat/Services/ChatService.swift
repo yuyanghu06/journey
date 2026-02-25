@@ -26,8 +26,6 @@ protocol ChatServiceProtocol {
 // MARK: - ChatService
 
 /// Production implementation that routes all requests through the typed APIClient.
-/// Currently returns stub responses until the backend /chat and /journal endpoints
-/// are deployed.
 final class ChatService: ChatServiceProtocol {
 
     // MARK: - Dependencies
@@ -47,13 +45,9 @@ final class ChatService: ChatServiceProtocol {
         userText: String,
         priorMessages: [Message]
     ) async -> String {
-        // TODO: Uncomment when backend is live:
-        // let dto = SendMessageRequest(dayKey: dayKey, text: userText, history: priorMessages)
-        // let response = try? await apiClient.post("/chat/sendMessage", body: dto, responseType: SendMessageResponse.self)
-        // return response?.reply ?? fallback
-
-        // Stub: returns a warm placeholder until the backend is connected.
-        return stubReply(for: userText)
+        let dto = SendMessageRequest(dayKey: dayKey, userText: userText)
+        let response = try? await apiClient.post("/chat/sendMessage", body: dto, responseType: SendMessageResponse.self)
+        return response?.assistantMessage.text ?? "I'm here. Tell me more."
     }
 
     // MARK: - Generate journal entry
@@ -64,44 +58,44 @@ final class ChatService: ChatServiceProtocol {
         dayKey: DayKey,
         messages: [Message]
     ) async -> String {
-        // TODO: Uncomment when backend is live:
-        // let userMessages = messages.filter { $0.role == .user }.map { $0.text }
-        // let dto = GenerateJournalRequest(dayKey: dayKey, messages: userMessages)
-        // let response = try? await apiClient.post("/journal/generate", body: dto, responseType: GenerateJournalResponse.self)
-        // return response?.entry ?? ""
-
-        // Stub: placeholder journal text until the backend is connected.
-        return "Your thoughts from today will appear here once the journal service is connected."
-    }
-
-    // MARK: - Private
-
-    /// Cycles through friendly prompts so the stub still feels conversational.
-    private func stubReply(for text: String) -> String {
-        let replies = [
-            "That's really interesting — tell me more about that.",
-            "How did that make you feel?",
-            "It sounds like today had a lot going on. What stood out most?",
-            "I hear you. What do you think you'll do differently next time?",
-            "Thanks for sharing that. What else is on your mind?",
-            "That's a great reflection. What are you looking forward to tomorrow?"
-        ]
-        return replies[abs(text.hashValue) % replies.count]
+        let dto = GenerateJournalRequest(dayKey: dayKey, messages: messages)
+        let response = try? await apiClient.post("/journal/generate", body: dto, responseType: GenerateJournalResponse.self)
+        return response?.journalEntry.text ?? ""
     }
 }
 
-// MARK: - Request / Response DTOs (ready for when backend is wired up)
+// MARK: - Request / Response DTOs
 
 /// Request body for POST /chat/sendMessage
 private struct SendMessageRequest: Encodable {
     let dayKey: String
-    let text: String
-    let history: [MessageDTO]
+    let userText: String
 
-    init(dayKey: DayKey, text: String, history: [Message]) {
+    init(dayKey: DayKey, userText: String) {
         self.dayKey   = dayKey.rawValue
-        self.text     = text
-        self.history  = history.map { MessageDTO($0) }
+        self.userText = userText
+    }
+}
+
+private struct AssistantMessageDTO: Decodable {
+    let id: String
+    let dayKey: String
+    let role: String
+    let text: String
+    let timestamp: String
+}
+
+private struct SendMessageResponse: Decodable {
+    let assistantMessage: AssistantMessageDTO
+}
+
+/// Request body for POST /journal/generate
+private struct GenerateJournalRequest: Encodable {
+    let dayKey: String
+    let messages: [MessageDTO]
+    init(dayKey: DayKey, messages: [Message]) {
+        self.dayKey    = dayKey.rawValue
+        self.messages  = messages.map { MessageDTO($0) }
     }
 }
 
@@ -114,20 +108,14 @@ private struct MessageDTO: Encodable {
     }
 }
 
-private struct SendMessageResponse: Decodable {
-    let reply: String
-}
-
-/// Request body for POST /journal/generate
-private struct GenerateJournalRequest: Encodable {
+private struct JournalEntryDTO: Decodable {
+    let id: String
     let dayKey: String
-    let messages: [String]
-    init(dayKey: DayKey, messages: [String]) {
-        self.dayKey   = dayKey.rawValue
-        self.messages = messages
-    }
+    let text: String
+    let createdAt: String
+    let updatedAt: String
 }
 
 private struct GenerateJournalResponse: Decodable {
-    let entry: String
+    let journalEntry: JournalEntryDTO
 }

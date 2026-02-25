@@ -61,7 +61,7 @@ final class APIClient: APIClientProtocol {
     var tokenProvider: TokenProviderProtocol
 
     init(
-        baseURL: URL = URL(string: "https://yourjourney.it.com")!,
+        baseURL: URL = URL(string: "https://journey-production-47d5.up.railway.app/")!,
         tokenProvider: TokenProviderProtocol = KeychainTokenProvider()
     ) {
         self.baseURL = baseURL

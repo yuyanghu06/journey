@@ -45,23 +45,33 @@ final class ChatViewModel: ObservableObject {
 
     // MARK: - Load
 
-    /// Fetches persisted messages for today from the repository.
-    /// If the day is fresh, seeds the thread with the assistant's opening line.
+    /// Fetches today's messages from the backend, falling back to a local welcome
+    /// message when the backend is unreachable or the day has no history yet.
     private func loadTodayConversation() {
         isLoadingHistory = true
         Task {
-            let conversation = await conversationRepository.fetchConversation(dayKey: dayKey)
-            if conversation.messages.isEmpty {
-                let welcome = Message(
-                    dayKey: dayKey,
-                    role: .assistant,
-                    text: "Hey! How's your day going so far?",
-                    status: .delivered
-                )
-                await conversationRepository.appendMessage(welcome, dayKey: dayKey)
-                messages = [welcome]
+            if let dayData = try? await APIClient.shared.get(
+                "/days/\(dayKey.rawValue)",
+                responseType: DayDataResponse.self
+            ), !dayData.conversation.messages.isEmpty {
+                let fetched = dayData.conversation.messages.map { $0.toMessage() }
+                await conversationRepository.setMessages(fetched, dayKey: dayKey)
+                messages = fetched
             } else {
-                messages = conversation.messages
+                // No backend history — check local store, then seed with welcome message.
+                let local = await conversationRepository.fetchConversation(dayKey: dayKey)
+                if local.messages.isEmpty {
+                    let welcome = Message(
+                        dayKey: dayKey,
+                        role: .assistant,
+                        text: "Hey! How's your day going so far?",
+                        status: .delivered
+                    )
+                    await conversationRepository.appendMessage(welcome, dayKey: dayKey)
+                    messages = [welcome]
+                } else {
+                    messages = local.messages
+                }
             }
             isLoadingHistory = false
         }
