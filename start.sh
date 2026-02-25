@@ -6,8 +6,10 @@ if [ -z "$DATABASE_URL" ]; then
   exit 1
 fi
 
-echo "[prisma] Starting schema push to database..."
-DATABASE_URL="$DATABASE_URL" DEBUG="prisma:schema-engine,prisma:info,prisma:warn,prisma:error" npx prisma db push --accept-data-loss
-echo "[prisma] Schema push complete."
+echo "[prisma] Applying migrations..."
+# In production, use migrations (deterministic, auditable) instead of `db push`.
+# This will create new tables/columns based on committed migration files in `prisma/migrations`.
+npx prisma migrate deploy
+echo "[prisma] Migrations applied."
 
 exec node dist/main
