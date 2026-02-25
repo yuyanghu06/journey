@@ -6,6 +6,8 @@ if [ -z "$DATABASE_URL" ]; then
   exit 1
 fi
 
-DATABASE_URL="$DATABASE_URL" npx prisma db push --accept-data-loss
+echo "[prisma] Starting schema push to database..."
+DATABASE_URL="$DATABASE_URL" DEBUG="prisma:schema-engine,prisma:info,prisma:warn,prisma:error" npx prisma db push --accept-data-loss
+echo "[prisma] Schema push complete."
 
 exec node dist/main
