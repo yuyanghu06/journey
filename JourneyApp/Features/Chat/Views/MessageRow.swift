@@ -70,9 +70,13 @@ struct MessageRow: View {
 
     /// Formats a Date to a short time string, e.g. "2:34 PM".
     private func shortTime(_ date: Date) -> String {
+        MessageRow.timeFormatter.string(from: date)
+    }
+
+    private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateStyle = .none
         f.timeStyle = .short
-        return f.string(from: date)
-    }
+        return f
+    }()
 }

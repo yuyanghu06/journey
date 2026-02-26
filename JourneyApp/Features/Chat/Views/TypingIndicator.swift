@@ -5,7 +5,7 @@ import SwiftUI
 // Uses the shared JourneyAvatar and the assistant bubble background colour.
 
 struct TypingIndicator: View {
-    @State private var phase: CGFloat = 0
+    @State private var animating = false
 
     var body: some View {
         HStack(alignment: .bottom, spacing: DS.Spacing.sm) {
@@ -17,10 +17,12 @@ struct TypingIndicator: View {
                     Circle()
                         .fill(DS.Colors.secondary)
                         .frame(width: 7, height: 7)
-                        .opacity(dotOpacity(index: index))
+                        .opacity(animating ? 1.0 : 0.35)
                         .animation(
-                            DS.Anim.gentle.repeatForever().delay(Double(index) * 0.18),
-                            value: phase
+                            DS.Anim.gentle
+                                .repeatForever(autoreverses: true)
+                                .delay(Double(index) * 0.18),
+                            value: animating
                         )
                 }
             }
@@ -32,12 +34,6 @@ struct TypingIndicator: View {
             Spacer()
         }
         .padding(.leading, DS.Spacing.sm)
-        .onAppear { phase = 1 }
-    }
-
-    /// Returns a pulsing opacity value for the given dot index.
-    private func dotOpacity(index: Int) -> Double {
-        let base = Double(phase)
-        return 0.35 + 0.65 * abs(sin((base + Double(index) * 0.5) * .pi))
+        .onAppear { animating = true }
     }
 }

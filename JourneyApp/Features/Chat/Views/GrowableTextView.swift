@@ -31,7 +31,7 @@ struct GrowableTextView: View {
                 .onAppear { recalcHeight() }
         }
         .background(DS.Colors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.pill, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .shadow(color: DS.Shadow.color, radius: 4, y: 1)
     }
 

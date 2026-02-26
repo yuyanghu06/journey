@@ -11,6 +11,11 @@ final class CalendarViewModel: ObservableObject {
 
     @Published var monthAnchor: Date = Date()
 
+    // Cached grid values — recomputed only when monthAnchor changes
+    @Published private(set) var monthTitle: String = ""
+    @Published private(set) var weekdaySymbols: [String] = []
+    @Published private(set) var gridDates: [Date] = []
+
     // MARK: - Dependencies
 
     private let conversationRepository: ConversationRepositoryProtocol
@@ -25,6 +30,15 @@ final class CalendarViewModel: ObservableObject {
     /// Days that have a generated journal entry.
     @Published var daysWithJournalEntries: Set<String> = []
 
+    // Shared formatter — allocated once
+    private static let monthFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.calendar = Calendar.autoupdatingCurrent
+        f.locale   = .autoupdatingCurrent
+        f.dateFormat = "LLLL yyyy"
+        return f
+    }()
+
     // MARK: - Init
 
     init(
@@ -33,60 +47,8 @@ final class CalendarViewModel: ObservableObject {
     ) {
         self.conversationRepository = conversationRepository
         self.journalRepository      = journalRepository
+        recomputeGrid()
         loadBadgeData()
-    }
-
-    // MARK: - Computed properties
-
-    /// e.g. "February 2026"
-    var monthTitle: String {
-        let f = DateFormatter()
-        f.calendar = calendar
-        f.locale   = .autoupdatingCurrent
-        f.dateFormat = "LLLL yyyy"
-        return f.string(from: monthAnchor)
-    }
-
-    /// Short weekday symbols starting from the locale's first weekday.
-    var weekdaySymbols: [String] {
-        let symbols = calendar.shortWeekdaySymbols
-        let first   = calendar.firstWeekday - 1
-        return Array(symbols[first...] + symbols[..<first])
-    }
-
-    /// All dates needed to fill the month grid, including leading/trailing padding days.
-    var gridDates: [Date] {
-        guard let start = calendar.date(from: calendar.dateComponents([.year, .month], from: monthAnchor)),
-              let range = calendar.range(of: .day, in: .month, for: start) else { return [] }
-
-        let daysInMonth      = range.count
-        let firstWeekday     = calendar.component(.weekday, from: start) - 1
-        let leadingDays      = (firstWeekday - (calendar.firstWeekday - 1) + 7) % 7
-
-        var dates: [Date] = []
-
-        // Leading padding from the previous month
-        for i in 0..<leadingDays {
-            if let d = calendar.date(byAdding: .day, value: i - leadingDays, to: start) {
-                dates.append(d)
-            }
-        }
-
-        // Current month's days
-        for day in 0..<daysInMonth {
-            if let d = calendar.date(byAdding: .day, value: day, to: start) {
-                dates.append(d)
-            }
-        }
-
-        // Trailing padding to complete the last row
-        let remainder = (7 - (dates.count % 7)) % 7
-        for i in 0..<remainder {
-            if let d = calendar.date(byAdding: .day, value: daysInMonth + i, to: start) {
-                dates.append(d)
-            }
-        }
-        return dates
     }
 
     // MARK: - Helpers
@@ -117,15 +79,66 @@ final class CalendarViewModel: ObservableObject {
         withAnimation(DS.Anim.gentle) {
             monthAnchor = calendar.date(byAdding: .month, value: -1, to: monthAnchor) ?? monthAnchor
         }
+        recomputeGrid()
     }
 
     func nextMonth() {
         withAnimation(DS.Anim.gentle) {
             monthAnchor = calendar.date(byAdding: .month, value: 1, to: monthAnchor) ?? monthAnchor
         }
+        recomputeGrid()
     }
 
     // MARK: - Private
+
+    /// Rebuilds monthTitle, weekdaySymbols, and gridDates from the current monthAnchor.
+    /// Called once on init and once per month navigation — never during render.
+    private func recomputeGrid() {
+        monthTitle     = Self.monthFormatter.string(from: monthAnchor)
+        weekdaySymbols = buildWeekdaySymbols()
+        gridDates      = buildGridDates()
+    }
+
+    private func buildWeekdaySymbols() -> [String] {
+        let symbols = calendar.shortWeekdaySymbols
+        let first   = calendar.firstWeekday - 1
+        return Array(symbols[first...] + symbols[..<first])
+    }
+
+    private func buildGridDates() -> [Date] {
+        guard let start = calendar.date(from: calendar.dateComponents([.year, .month], from: monthAnchor)),
+              let range = calendar.range(of: .day, in: .month, for: start) else { return [] }
+
+        let daysInMonth  = range.count
+        let firstWeekday = calendar.component(.weekday, from: start) - 1
+        let leadingDays  = (firstWeekday - (calendar.firstWeekday - 1) + 7) % 7
+
+        var dates: [Date] = []
+        dates.reserveCapacity(leadingDays + daysInMonth + 6)
+
+        // Leading padding from the previous month
+        for i in 0..<leadingDays {
+            if let d = calendar.date(byAdding: .day, value: i - leadingDays, to: start) {
+                dates.append(d)
+            }
+        }
+
+        // Current month's days
+        for day in 0..<daysInMonth {
+            if let d = calendar.date(byAdding: .day, value: day, to: start) {
+                dates.append(d)
+            }
+        }
+
+        // Trailing padding to complete the last row
+        let remainder = (7 - (dates.count % 7)) % 7
+        for i in 0..<remainder {
+            if let d = calendar.date(byAdding: .day, value: daysInMonth + i, to: start) {
+                dates.append(d)
+            }
+        }
+        return dates
+    }
 
     /// Loads badge data from both repositories.
     private func loadBadgeData() {

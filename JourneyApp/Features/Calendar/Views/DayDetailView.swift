@@ -155,9 +155,11 @@ struct DayDetailView: View {
                     Spacer()
                 }
 
-                ForEach(conversation.messages) { message in
-                    MessageRow(message: message)
-                        .padding(.vertical, DS.Spacing.xxs)
+                LazyVStack(spacing: DS.Spacing.xxs) {
+                    ForEach(conversation.messages) { message in
+                        MessageRow(message: message)
+                            .padding(.vertical, DS.Spacing.xxs)
+                    }
                 }
             }
             .journeyCard(radius: DS.Radius.xl, padding: DS.Spacing.md)
