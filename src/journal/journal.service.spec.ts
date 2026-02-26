@@ -97,4 +97,9 @@ describe('JournalService', () => {
       'Today I reflected on a difficult day.',
     );
   });
+
+  it('throws BadRequestException when there is no conversation', async () => {
+    chatRepo.getByDayKey.mockResolvedValue([]);
+    await expect(service.generate('2026-02-25', null)).rejects.toThrow('No conversation found');
+  });
 });

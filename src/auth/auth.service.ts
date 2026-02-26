@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -16,10 +17,21 @@ const REFRESH_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
-  ) {}
+  ) {
+    if (process.env.NODE_ENV === 'production') {
+      if (!process.env.JWT_ACCESS_SECRET) {
+        this.logger.warn('JWT_ACCESS_SECRET is not set — using insecure dev fallback in production!');
+      }
+      if (!process.env.JWT_REFRESH_SECRET) {
+        this.logger.warn('JWT_REFRESH_SECRET is not set — using insecure dev fallback in production!');
+      }
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Register

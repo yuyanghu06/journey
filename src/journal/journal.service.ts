@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { AiService } from '../ai/ai.service';
 import { JournalRepository } from './journal.repository';
 import { ChatRepository } from '../chat/chat.repository';
@@ -26,6 +26,10 @@ export class JournalService {
       .filter((m) => m.role !== 'system')
       .map((m) => `${m.role === 'user' ? 'Me' : 'Journey'}: ${m.text}`)
       .join('\n');
+
+    if (!conversationText.trim()) {
+      throw new BadRequestException('No conversation found for this day — cannot generate journal entry');
+    }
 
     // Call AI — JournalService is the only other permitted caller of AiService
     const text = await this.ai.summarise(conversationText);

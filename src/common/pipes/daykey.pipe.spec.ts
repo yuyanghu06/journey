@@ -27,4 +27,20 @@ describe('DayKeyPipe', () => {
   it('rejects a date with letters', () => {
     expect(() => pipe.transform('abcd-ef-gh')).toThrow(BadRequestException);
   });
+
+  it('rejects month 00', () => {
+    expect(() => pipe.transform('2026-00-15')).toThrow(BadRequestException);
+  });
+
+  it('rejects month 13', () => {
+    expect(() => pipe.transform('2026-13-01')).toThrow(BadRequestException);
+  });
+
+  it('rejects day 00', () => {
+    expect(() => pipe.transform('2026-02-00')).toThrow(BadRequestException);
+  });
+
+  it('rejects day 32', () => {
+    expect(() => pipe.transform('2026-01-32')).toThrow(BadRequestException);
+  });
 });
