@@ -27,14 +27,16 @@ Updatable parameters:
   the frozen backbone layers remain static.
 """
 
+import platform
 from pathlib import Path
 from typing import Optional
 
 import torch
 import coremltools as ct
 import coremltools.optimize.coreml as cto
+from packaging.version import InvalidVersion, Version
 
-from .model import PersonalityModel, EMBEDDING_DIM
+from .model import EMBEDDING_DIM, PersonalityModel
 from .tokens import TOKENS, VOCAB_SIZE
 
 
@@ -66,6 +68,8 @@ def export_to_coreml(
     Returns:
         Path to the saved .mlpackage directory.
     """
+    _validate_coreml_environment()
+
     weights_path = Path(weights_path)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -76,7 +80,12 @@ def export_to_coreml(
     # ── Step 1: Reconstruct model and load weights ─────────────────────────────
     model = PersonalityModel()
     checkpoint = torch.load(weights_path, map_location="cpu")
-    model.load_state_dict(checkpoint["model_state_dict"])
+    load_status = model.load_state_dict(checkpoint["model_state_dict"], strict=False)
+    if load_status.missing_keys or load_status.unexpected_keys:
+        raise RuntimeError(
+            "[export] Checkpoint does not match current architecture. "
+            "Retrain and export again to produce compatible weights."
+        )
 
     # Freeze backbone — only projection head will be updatable in Core ML.
     model.freeze_backbone()
@@ -196,6 +205,39 @@ def _mark_updatable_layers(spec) -> None:
             f"({exc}). Projection weights must be marked updatable manually "
             f"or via Core ML Training API at inference time."
         )
+
+
+def _validate_coreml_environment() -> None:
+    """
+    Fail fast if coremltools cannot load platform-native extensions or if the
+    runtime is an untested platform/version combination.
+    """
+    if platform.system() != "Darwin":
+        raise RuntimeError(
+            "[export] Core ML export requires macOS with the Apple-provided "
+            "coremltools binaries. Run training with --no-export or perform "
+            "export on a macOS machine."
+        )
+
+    try:
+        import coremltools.libcoremlpython  # type: ignore
+    except Exception as exc:  # pragma: no cover - environment dependent
+        raise RuntimeError(
+            "[export] coremltools native extensions are unavailable. Install "
+            "coremltools via the official macOS wheel and ensure Xcode CLI "
+            "tools are present."
+        ) from exc
+
+    try:
+        torch_version = Version(torch.__version__.split("+")[0])
+        tested = Version("2.7.0")
+        if torch_version > tested:
+            print(
+                f"[export] Warning: Torch {torch.__version__} is newer than the "
+                f"tested {tested}; conversion may be unstable."
+            )
+    except InvalidVersion:
+        pass
 
 
 # ── Convenience: inspect exported model ───────────────────────────────────────

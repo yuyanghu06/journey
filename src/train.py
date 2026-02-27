@@ -6,7 +6,7 @@ Pretraining script for the PersonalityModel.
 Usage:
     python -m src.train [--output-dir outputs] [--epochs 3] [--batch-size 256]
                         [--lr 3e-4] [--local-model BAAI/bge-base-en-v1.5]
-                        [--max-samples 50000] [--seed 42]
+                        [--max-samples 50000] [--seed 42] [--device cuda]
 
 What this script does:
   1. Load personality tokens from personality-tokens.json.
@@ -58,29 +58,54 @@ RANDOM_SEED: int = 42
 
 # ── Reproducibility ────────────────────────────────────────────────────────────
 
-def set_seed(seed: int) -> None:
+def set_seed(seed: int, device: Optional[torch.device] = None) -> None:
     """Fix all random seeds for reproducible training runs."""
     random.seed(seed)
     torch.manual_seed(seed)
-    if torch.cuda.is_available():
+
+    target = device.type if isinstance(device, torch.device) else None
+
+    if target == "cuda" or (target is None and torch.cuda.is_available()):
         torch.cuda.manual_seed_all(seed)
-    if torch.backends.mps.is_available():
+    if target == "mps" or (target is None and torch.backends.mps.is_available()):
         torch.mps.manual_seed(seed)
 
 
 # ── Device selection ───────────────────────────────────────────────────────────
 
-def get_device() -> torch.device:
+def get_device(preferred: Optional[str] = "auto") -> torch.device:
     """
-    Select the best available compute device.
+    Select a compute device with CUDA priority.
 
-    Priority: CUDA GPU > Apple MPS (M-series) > CPU
+    Args:
+        preferred: "auto" (default, CUDA→MPS→CPU) or explicit "cuda" | "mps" | "cpu".
+
+    Raises:
+        RuntimeError if an explicit device is requested but unavailable.
     """
-    if torch.cuda.is_available():
+    if preferred is None:
+        preferred = "auto"
+
+    choice = preferred.lower()
+    if choice == "auto":
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+        return torch.device("cpu")
+
+    if choice == "cuda":
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA requested but no CUDA device is available.")
         return torch.device("cuda")
-    if torch.backends.mps.is_available():
+    if choice == "mps":
+        if not torch.backends.mps.is_available():
+            raise RuntimeError("MPS requested but no MPS device is available.")
         return torch.device("mps")
-    return torch.device("cpu")
+    if choice == "cpu":
+        return torch.device("cpu")
+
+    raise ValueError("Invalid device selection. Use 'auto', 'cuda', 'mps', or 'cpu'.")
 
 
 # ── Training metrics ───────────────────────────────────────────────────────────
@@ -303,12 +328,13 @@ def train(
     seed: int = RANDOM_SEED,
     force_rebuild_cache: bool = False,
     export_coreml: bool = True,
+    device: str = "auto",
 ) -> PersonalityModel:
     """
     Full pretraining pipeline.
 
     Steps:
-      1. Set seeds, select device.
+      1. Select device, set seeds.
       2. Initialise embedding backend.
       3. Build (or load cached) PersonalityDataset.
       4. Split dataset into train / validation.
@@ -328,23 +354,26 @@ def train(
         seed:                 Random seed for reproducibility.
         force_rebuild_cache:  Ignore cached embeddings and recompute.
         export_coreml:        Export to .mlpackage after training.
+        device:               Compute device: "auto" (CUDA→MPS→CPU) or explicit choice.
 
     Returns:
         The trained PersonalityModel (on CPU, in eval mode).
     """
-    set_seed(seed)
-    device = get_device()
+    device_obj = get_device(device)
+    set_seed(seed, device_obj)
     output_path = Path(output_dir)
     checkpoint_dir = output_path / "checkpoints"
 
-    print(f"[train] Device: {device}")
+    print(f"[train] Device: {device_obj}")
     print(f"[train] Output directory: {output_path.resolve()}")
     print(f"[train] Epochs: {epochs} | Batch size: {batch_size} | LR: {learning_rate}")
     print(f"[train] Vocab size: {VOCAB_SIZE} tokens")
 
     # ── Step 1: Embedding backend ──────────────────────────────────────────────
     # Auto-selects OpenAI if OPENAI_API_KEY is set, otherwise local model.
-    embedding_backend = EmbeddingBackend.from_env(local_model=local_model)
+    embedding_backend = EmbeddingBackend.from_env(
+        local_model=local_model, device=device_obj.type
+    )
 
     # ── Step 2: Dataset ────────────────────────────────────────────────────────
     dataset = PersonalityDataset(
@@ -370,7 +399,7 @@ def train(
         batch_size=batch_size,
         shuffle=True,
         num_workers=2,
-        pin_memory=(device.type in ("cuda", "mps")),
+        pin_memory=(device_obj.type in ("cuda", "mps")),
         drop_last=False,
     )
     val_loader = DataLoader(
@@ -378,11 +407,11 @@ def train(
         batch_size=batch_size,
         shuffle=False,
         num_workers=2,
-        pin_memory=(device.type in ("cuda", "mps")),
+        pin_memory=(device_obj.type in ("cuda", "mps")),
     )
 
     # ── Step 4: Model ──────────────────────────────────────────────────────────
-    model = PersonalityModel().to(device)
+    model = PersonalityModel().to(device_obj)
     param_info = model.count_parameters()
     print(
         f"[train] Parameters — total: {param_info['total']:,} | "
@@ -418,12 +447,12 @@ def train(
 
         # ── Train ──────────────────────────────────────────────────────────────
         train_metrics = train_one_epoch(
-            model, train_loader, criterion, optimizer, device, epoch
+            model, train_loader, criterion, optimizer, device_obj, epoch
         )
         scheduler.step()  # update LR after each epoch
 
         # ── Validate ───────────────────────────────────────────────────────────
-        val_metrics = validate(model, val_loader, criterion, device)
+        val_metrics = validate(model, val_loader, criterion, device_obj)
 
         # ── Log epoch summary ──────────────────────────────────────────────────
         current_lr = scheduler.get_last_lr()[0]
@@ -522,6 +551,10 @@ def _parse_args() -> argparse.Namespace:
         "--no-export", action="store_true",
         help="Skip Core ML export after training."
     )
+    parser.add_argument(
+        "--device", default="auto", choices=["auto", "cuda", "mps", "cpu"],
+        help="Compute device to use. Default: auto (prefers CUDA, then MPS, else CPU)."
+    )
     return parser.parse_args()
 
 
@@ -537,4 +570,5 @@ if __name__ == "__main__":
         seed=args.seed,
         force_rebuild_cache=args.force_rebuild,
         export_coreml=not args.no_export,
+        device=args.device,
     )

@@ -6,7 +6,7 @@ Defines the PersonalityModel architecture.
 Pipeline (all dimensions are explicit):
     Input  : (batch, 1536)  — pre-computed text embedding
     ↓ input_projection      — linear 1536→LATENT_DIM
-    ↓ encoder               — N× TransformerEncoderLayer  (frozen backbone)
+    ↓ encoder               — N× lightweight attention blocks (frozen backbone)
     ↓ projection            — linear LATENT_DIM→325       (trainable head)
     ↓ (+ bias)
     Output : (batch, 325)   — raw logits; apply torch.sigmoid for probabilities
@@ -32,6 +32,91 @@ NUM_HEADS: int = 8           # Multi-head attention heads (LATENT_DIM must be di
 NUM_ENCODER_LAYERS: int = 2  # Depth of the frozen encoder backbone
 FFN_DIM: int = LATENT_DIM * 4  # Feed-forward inner dimension in transformer layers
 DROPOUT: float = 0.1        # Dropout applied during training only
+
+
+# ── Encoder building blocks ──────────────────────────────────────────────────────
+
+
+class SimpleSelfAttention(nn.Module):
+    """
+    Minimal self-attention built from Core ML–friendly primitives.
+    Avoids the fused Transformer encoder op that coremltools cannot lower.
+    """
+
+    def __init__(self, dim: int, num_heads: int, dropout: float) -> None:
+        super().__init__()
+        if dim % num_heads != 0:
+            raise ValueError("latent_dim must be divisible by num_heads")
+
+        self.num_heads = num_heads
+        self.head_dim = dim // num_heads
+        self.scale = self.head_dim**-0.5
+
+        self.q_proj = nn.Linear(dim, dim)
+        self.k_proj = nn.Linear(dim, dim)
+        self.v_proj = nn.Linear(dim, dim)
+        self.out_proj = nn.Linear(dim, dim)
+        self.attn_drop = nn.Dropout(dropout)
+        self.proj_drop = nn.Dropout(dropout)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x: (batch, seq_len, dim)
+        bsz, seq_len, dim = x.shape
+        q = self.q_proj(x)
+        k = self.k_proj(x)
+        v = self.v_proj(x)
+
+        # Reshape to (batch, heads, seq_len, head_dim)
+        def _reshape(t: torch.Tensor) -> torch.Tensor:
+            return t.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
+
+        q = _reshape(q)
+        k = _reshape(k)
+        v = _reshape(v)
+
+        # Attention weights: (batch, heads, seq, seq)
+        attn = torch.matmul(q * self.scale, k.transpose(-2, -1))
+        attn = torch.softmax(attn, dim=-1)
+        attn = self.attn_drop(attn)
+
+        # Weighted sum of values
+        out = torch.matmul(attn, v)  # (batch, heads, seq_len, head_dim)
+        out = out.transpose(1, 2).contiguous().view(bsz, seq_len, dim)
+        out = self.out_proj(out)
+        out = self.proj_drop(out)
+        return out
+
+
+class SimpleEncoderLayer(nn.Module):
+    """
+    Lightweight encoder layer: LayerNorm → SelfAttention → residual →
+    LayerNorm → FFN → residual. Uses primitives that Core ML can convert.
+    """
+
+    def __init__(self, dim: int, num_heads: int, ffn_dim: int, dropout: float) -> None:
+        super().__init__()
+        self.norm1 = nn.LayerNorm(dim)
+        self.attn = SimpleSelfAttention(dim, num_heads, dropout)
+        self.dropout = nn.Dropout(dropout)
+
+        self.norm2 = nn.LayerNorm(dim)
+        self.ffn = nn.Sequential(
+            nn.Linear(dim, ffn_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(ffn_dim, dim),
+            nn.Dropout(dropout),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # Self-attention block
+        attn_out = self.attn(self.norm1(x))
+        x = x + self.dropout(attn_out)
+
+        # Feed-forward block
+        ffn_out = self.ffn(self.norm2(x))
+        x = x + ffn_out
+        return x
 
 
 # ── Model ──────────────────────────────────────────────────────────────────────
@@ -68,24 +153,17 @@ class PersonalityModel(nn.Module):
         # This is part of the frozen backbone.
         self.input_projection = nn.Linear(embedding_dim, latent_dim)
 
-        # Standard transformer encoder. Each layer applies:
-        #   multi-head self-attention → residual → layer-norm
-        #   feed-forward (ReLU)      → residual → layer-norm
-        #
-        # batch_first=True means input shape is (batch, seq, dim), which is
-        # required for clean Core ML export (static batch / seq dims).
-        encoder_layer = nn.TransformerEncoderLayer(
-            d_model=latent_dim,
-            nhead=num_heads,
-            dim_feedforward=ffn_dim,
-            dropout=dropout,
-            batch_first=True,
-            norm_first=False,  # post-norm (standard); more stable for export
-        )
-        self.encoder = nn.TransformerEncoder(
-            encoder_layer,
-            num_layers=num_encoder_layers,
-            enable_nested_tensor=False,  # disable for deterministic Core ML export
+        # Export-friendly encoder: stack of lightweight attention blocks.
+        self.encoder_layers = nn.ModuleList(
+            [
+                SimpleEncoderLayer(
+                    dim=latent_dim,
+                    num_heads=num_heads,
+                    ffn_dim=ffn_dim,
+                    dropout=dropout,
+                )
+                for _ in range(num_encoder_layers)
+            ]
         )
 
         # ── Trainable head ───────────────────────────────────────────────────────
@@ -138,7 +216,8 @@ class PersonalityModel(nn.Module):
         # With seq_len=1 there is no meaningful self-attention across tokens,
         # but the feed-forward sub-layers still apply non-linear transformation
         # to the latent representation.
-        h = self.encoder(h)  # (batch, 1, LATENT_DIM)
+        for layer in self.encoder_layers:
+            h = layer(h)  # (batch, 1, LATENT_DIM)
 
         # ── Step 4: remove sequence dimension ─────────────────────────────────
         h = h.squeeze(1)  # (batch, LATENT_DIM)
@@ -159,14 +238,14 @@ class PersonalityModel(nn.Module):
         """
         for param in self.input_projection.parameters():
             param.requires_grad = False
-        for param in self.encoder.parameters():
+        for param in self.encoder_layers.parameters():
             param.requires_grad = False
 
     def unfreeze_backbone(self) -> None:
         """Re-enable gradients on the backbone (e.g., for continued pretraining)."""
         for param in self.input_projection.parameters():
             param.requires_grad = True
-        for param in self.encoder.parameters():
+        for param in self.encoder_layers.parameters():
             param.requires_grad = True
 
     def trainable_parameters(self) -> list:

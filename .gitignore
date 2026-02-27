@@ -1,2 +1,4 @@
 trainer
 .env
+src/__pycache__
+outputs

@@ -41,6 +41,40 @@ DEFAULT_LOCAL_MODEL: str = "BAAI/bge-base-en-v1.5"  # 768-dim → projected to 1
 LOCAL_MAX_LENGTH: int = 512     # Token truncation limit for local encoder
 
 
+# ── Device selection ────────────────────────────────────────────────────────────
+
+def _resolve_device(device: Optional[str] = None) -> torch.device:
+    """
+    Choose a torch.device, preferring CUDA by default.
+
+    Args:
+        device: "auto" (or None) to auto-select, or explicit "cuda" | "mps" | "cpu".
+    """
+    if device is None:
+        device = "auto"
+
+    choice = device.lower()
+    if choice == "auto":
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+        return torch.device("cpu")
+
+    if choice == "cuda":
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA requested but no CUDA device is available.")
+        return torch.device("cuda")
+    if choice == "mps":
+        if not torch.backends.mps.is_available():
+            raise RuntimeError("MPS requested but no MPS device is available.")
+        return torch.device("mps")
+    if choice == "cpu":
+        return torch.device("cpu")
+
+    raise ValueError(f"Unsupported device '{device}'. Use 'auto', 'cuda', 'mps', or 'cpu'.")
+
+
 # ── Projection layer (local backend only) ─────────────────────────────────────
 
 class EmbeddingProjector(nn.Module):
@@ -82,9 +116,7 @@ class LocalEmbeddingBackend:
         device: Optional[str] = None,
         projector: Optional[EmbeddingProjector] = None,
     ) -> None:
-        self.device = device or ("mps" if torch.backends.mps.is_available()
-                                 else "cuda" if torch.cuda.is_available()
-                                 else "cpu")
+        self.device = _resolve_device(device)
         print(f"[LocalEmbeddingBackend] Loading '{model_name}' on {self.device}")
 
         # Load tokenizer and frozen encoder.
@@ -263,6 +295,9 @@ class EmbeddingBackend:
             local_model: HuggingFace model ID for the local fallback.
             device:      Torch device string for the local backend.
         """
+        if isinstance(device, torch.device):
+            device = device.type
+
         if os.getenv("OPENAI_API_KEY"):
             print("[EmbeddingBackend] OPENAI_API_KEY found — using OpenAI backend.")
             return OpenAIEmbeddingBackend()
