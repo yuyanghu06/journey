@@ -22,11 +22,13 @@ export class AiService {
   private readonly logger = new Logger(AiService.name);
   private readonly chatSystemPrompt: string;
   private readonly journalSystemPrompt: string;
+  private readonly personalitySystemPromptTemplate: string;
 
   constructor() {
     this.client = new OpenAI({ apiKey: process.env.AI_PROVIDER_KEY });
     this.chatSystemPrompt = loadPrompt('chat.txt');
     this.journalSystemPrompt = loadPrompt('journal.txt');
+    this.personalitySystemPromptTemplate = loadPrompt('personality.txt');
   }
 
   /**
@@ -41,6 +43,29 @@ export class AiService {
     ];
 
     return this.callWithRetry(payload, 'chat');
+  }
+
+  /**
+   * Sends a conversation to the AI using a personality-aware system prompt.
+   * personalityTokens are injected into the prompt to tailor the AI's voice.
+   * Called ONLY from ChatService — never from controllers or other services.
+   */
+  async chatWithPersonality(
+    messages: AiMessage[],
+    personalityTokens: string[],
+  ): Promise<string> {
+    const tokenList = personalityTokens.join(', ');
+    const systemPrompt = this.personalitySystemPromptTemplate.replace(
+      '{PERSONALITY_TOKENS}',
+      tokenList,
+    );
+    const trimmed = this.truncateMessages(messages);
+    const payload: AiMessage[] = [
+      { role: 'system', content: systemPrompt },
+      ...trimmed,
+    ];
+
+    return this.callWithRetry(payload, 'chatWithPersonality');
   }
 
   /**
