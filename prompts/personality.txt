@@ -6,6 +6,7 @@ You are given:
 
 Personality tokens: {PERSONALITY_TOKENS}
 
+{MEMORIES_SECTION}
 Using both the tokens and the provided context, generate responses that sound like the user talking to themselves — reflective, natural, and internally consistent with how they think and feel.
 
 Guidelines:

@@ -48,17 +48,22 @@ export class AiService {
   /**
    * Sends a conversation to the AI using a personality-aware system prompt.
    * personalityTokens are injected into the prompt to tailor the AI's voice.
-   * Called ONLY from ChatService — never from controllers or other services.
+   * memories (optional) are personal context notes injected as background.
+   * Called ONLY from PersonalityService — never from controllers or other services.
    */
   async chatWithPersonality(
     messages: AiMessage[],
     personalityTokens: string[],
+    memories: string[] = [],
   ): Promise<string> {
     const tokenList = personalityTokens.join(', ');
-    const systemPrompt = this.personalitySystemPromptTemplate.replace(
-      '{PERSONALITY_TOKENS}',
-      tokenList,
-    );
+    const memoriesSection =
+      memories.length > 0
+        ? `Personal context and memories:\n${memories.map((m) => `- ${m}`).join('\n')}`
+        : '';
+    const systemPrompt = this.personalitySystemPromptTemplate
+      .replace('{PERSONALITY_TOKENS}', tokenList || 'none')
+      .replace('{MEMORIES_SECTION}', memoriesSection);
     const trimmed = this.truncateMessages(messages);
     const payload: AiMessage[] = [
       { role: 'system', content: systemPrompt },

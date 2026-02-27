@@ -9,6 +9,7 @@ import { DaysModule } from './days/days.module';
 import { HealthModule } from './health/health.module';
 import { LegacyModule } from './legacy/legacy.module';
 import { PersonalityModule } from './personality/personality.module';
+import { MemoriesModule } from './memories/memories.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PersonalityModule } from './personality/personality.module';
     HealthModule,
     LegacyModule,
     PersonalityModule,
+    MemoriesModule,
   ],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { PersonalityService } from './personality.service';
 import { PersonalitySendMessageDto } from './dto/personality-send-message.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -9,14 +9,13 @@ export class PersonalityController {
 
   /**
    * POST /personality/sendMessage
-   * Personality-aware chat endpoint. Accepts personalityTokens derived from
-   * on-device inference and routes to a dedicated AI call using the personality
-   * system prompt. Falls back to the plain chat prompt when tokens array is empty.
+   * Stateless personality-aware chat.
+   * Accepts the full conversation history and memories from the client.
+   * Nothing is persisted — personality conversations are stored locally on-device.
    */
   @UseGuards(JwtAuthGuard)
   @Post('sendMessage')
-  sendMessage(@Body() dto: PersonalitySendMessageDto, @Request() req) {
-    const userId: string | null = req.user?.id ?? null;
-    return this.personalityService.sendMessage(dto, userId);
+  sendMessage(@Body() dto: PersonalitySendMessageDto) {
+    return this.personalityService.sendMessage(dto);
   }
 }

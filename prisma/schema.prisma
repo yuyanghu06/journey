@@ -8,7 +8,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL")s
 }
 
 model User {
@@ -20,6 +20,7 @@ model User {
   messages       Message[]
   journalEntries JournalEntry[]
   refreshTokens  RefreshToken[]
+  memories       Memory[]
 }
 
 model Message {
@@ -61,4 +62,18 @@ model RefreshToken {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+// User-authored memory notes fed into personality training.
+// Mirrors the iOS ContextDocument model.
+model Memory {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
