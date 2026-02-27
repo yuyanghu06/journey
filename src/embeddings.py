@@ -16,7 +16,7 @@ Two backends are supported:
   2. Local HuggingFace Transformers  (fallback / fully offline)
      Any encoder model is supported.  If the model's hidden size ≠ 1536, a
      learned linear projection (EmbeddingProjector) maps it to 1536.
-     Default local model: "BAAI/bge-base-en-v1.5"  (hidden_size=768)
+     Default local model: "sentence-transformers/all-MiniLM-L6-v2"  (hidden_size=384)
 
 Usage:
     from src.embeddings import EmbeddingBackend
@@ -37,7 +37,7 @@ from transformers import AutoTokenizer, AutoModel
 
 TARGET_DIM: int = 1536          # Canonical embedding dimension expected by PersonalityModel
 OPENAI_MODEL: str = "text-embedding-3-small"  # 1536-dim native output
-DEFAULT_LOCAL_MODEL: str = "BAAI/bge-base-en-v1.5"  # 768-dim → projected to 1536
+DEFAULT_LOCAL_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"  # 384-dim → projected to 1536
 LOCAL_MAX_LENGTH: int = 512     # Token truncation limit for local encoder
 
 

@@ -5,7 +5,7 @@ Pretraining script for the PersonalityModel.
 
 Usage:
     python -m src.train [--output-dir outputs] [--epochs 3] [--batch-size 256]
-                        [--lr 3e-4] [--local-model BAAI/bge-base-en-v1.5]
+                        [--lr 3e-4] [--local-model sentence-transformers/all-MiniLM-L6-v2]
                         [--max-samples 50000] [--seed 42] [--device cuda]
 
 What this script does:
@@ -323,7 +323,7 @@ def train(
     epochs: int = NUM_EPOCHS,
     batch_size: int = BATCH_SIZE,
     learning_rate: float = LEARNING_RATE,
-    local_model: str = "BAAI/bge-base-en-v1.5",
+    local_model: str = "sentence-transformers/all-MiniLM-L6-v2",
     max_samples: int = 50_000,
     seed: int = RANDOM_SEED,
     force_rebuild_cache: bool = False,
@@ -350,6 +350,7 @@ def train(
         batch_size:           DataLoader batch size.
         learning_rate:        AdamW initial LR.
         local_model:          HuggingFace model ID for the local embedding backend.
+                              Defaults to all-MiniLM-L6-v2 (384-dim → projected to 1536).
         max_samples:          Max training samples from FuseChat-Mixture.
         seed:                 Random seed for reproducibility.
         force_rebuild_cache:  Ignore cached embeddings and recompute.
@@ -532,8 +533,8 @@ def _parse_args() -> argparse.Namespace:
         help=f"AdamW initial learning rate (default: {LEARNING_RATE})."
     )
     parser.add_argument(
-        "--local-model", default="BAAI/bge-base-en-v1.5",
-        help="HuggingFace model for local embeddings (default: BAAI/bge-base-en-v1.5)."
+        "--local-model", default="sentence-transformers/all-MiniLM-L6-v2",
+        help="HuggingFace model for local embeddings (default: sentence-transformers/all-MiniLM-L6-v2)."
     )
     parser.add_argument(
         "--max-samples", type=int, default=50_000,

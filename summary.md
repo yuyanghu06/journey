@@ -73,9 +73,9 @@ all trained weights and deployed models.
 | Local HuggingFace encoder | `LocalEmbeddingBackend` | default / fallback |
 
 **`LocalEmbeddingBackend`:**
-- Default model: `BAAI/bge-base-en-v1.5` (768-dim hidden).
-- Mean-pools last hidden state over non-padding tokens.
-- Attaches `EmbeddingProjector` (Linear 768 → 1536) if `hidden_size ≠ 1536`.
+- Default model: `sentence-transformers/all-MiniLM-L6-v2` (384-dim hidden).
+- Mean-pools last hidden state over non-padding tokens; L2-normalizes the result.
+- Attaches `EmbeddingProjector` (Linear 384 → 1536) to match `PersonalityModel` input contract.
 - Encoder is always frozen; projector is trained alongside `PersonalityModel` during pretraining.
 
 **`EmbeddingBackend.from_env()`** — factory that auto-selects the correct backend.
@@ -131,7 +131,7 @@ python -m src.train \
   --epochs 3 \
   --batch-size 256 \
   --lr 3e-4 \
-  --local-model BAAI/bge-base-en-v1.5 \
+  --local-model sentence-transformers/all-MiniLM-L6-v2 \
   --max-samples 50000
 ```
 

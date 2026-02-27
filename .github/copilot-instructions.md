@@ -18,9 +18,9 @@ The model must be:
 Pipeline:
 
 1. **Input text → embedding vector**
-   - Map input text to a **1536‑dimensional vector**.
-   - This can be produced using a frozen embedding model (e.g. OpenAI embeddings or a local equivalent).
-   - Embedding generation is NOT part of the Core ML personality model.
+   - Encode input text with **`sentence-transformers/all-MiniLM-L6-v2`** (384‑dim output).
+   - L2-normalize the 384‑dim vector, then project to **1536 dimensions** via a trained linear layer (`EmbeddingProjector`).
+   - Embedding generation and projection are NOT part of the Core ML personality model.
 
 2. **Encoder block (frozen backbone)**
    - Input: 1536‑dim vector
@@ -36,7 +36,7 @@ Pipeline:
 Output:
 
 ```
-1536‑dim input → encoder → latent → linear projection → 325‑dim token distribution
+384‑dim MiniLM output → L2‑norm → Linear(384→1536) → 1536‑dim input → encoder → latent → linear projection → 325‑dim token distribution
 ```
 
 The 325‑dimensional space is **categorical**, not semantic.
@@ -51,7 +51,7 @@ Dataset: `FuseAI/FuseChat-Mixture`
 Training pipeline:
 
 1. Chunk or pool text samples
-2. Convert each chunk into a 1536‑dim embedding
+2. Encode each chunk with `sentence-transformers/all-MiniLM-L6-v2` (384-dim) and project to 1536-dim via `EmbeddingProjector`
 3. Compute similarity between embedding and each personality token embedding
 4. Convert similarities into a normalized target distribution over the 325 tokens
 5. Train using BCEWithLogitsLoss (multi‑label token activation)
