@@ -8,6 +8,7 @@ import { CalendarModule } from './calendar/calendar.module';
 import { DaysModule } from './days/days.module';
 import { HealthModule } from './health/health.module';
 import { LegacyModule } from './legacy/legacy.module';
+import { PersonalityModule } from './personality/personality.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { LegacyModule } from './legacy/legacy.module';
     DaysModule,
     HealthModule,
     LegacyModule,
+    PersonalityModule,
   ],
 })
 export class AppModule {}
