@@ -95,6 +95,9 @@ export class AiService {
     context: string,
     attempt = 1,
   ): Promise<string> {
+    this.logger.log(
+      `[${context}] INPUT (attempt ${attempt}):\n${JSON.stringify(messages, null, 2)}`,
+    );
     try {
       const completion = await this.client.chat.completions.create({
         model: 'gpt-4o-mini',
@@ -103,7 +106,9 @@ export class AiService {
         temperature: 0.7,
       });
 
-      return completion.choices[0]?.message?.content?.trim() ?? '';
+      const output = completion.choices[0]?.message?.content?.trim() ?? '';
+      this.logger.log(`[${context}] OUTPUT:\n${output}`);
+      return output;
     } catch (err: any) {
       const status = err?.status ?? 0;
 
