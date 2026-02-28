@@ -48,7 +48,7 @@ def main() -> None:
         sys.exit(f"[export_cli] Weights not found: {weights_path}")
 
     try:
-        output_path = export_to_coreml(
+        full_path, head_path = export_to_coreml(
             weights_path=weights_path,
             output_dir=output_dir,
             package_name=args.package_name,
@@ -56,7 +56,8 @@ def main() -> None:
     except RuntimeError as exc:
         sys.exit(f"[export_cli] Export failed: {exc}")
 
-    print(f"[export_cli] Saved Core ML package → {output_path}")
+    print(f"[export_cli] Full model  → {full_path}")
+    print(f"[export_cli] Head model  → {head_path}")
 
 
 if __name__ == "__main__":
