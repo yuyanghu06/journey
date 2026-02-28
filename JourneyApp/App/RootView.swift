@@ -24,7 +24,7 @@ struct RootView: View {
                         }
                     }
             } else if auth.isAuthenticated {
-                ChatView()
+                MainTabView()
                     .environmentObject(auth)
                     .onAppear { auth.startTokenRefresher() }
             } else {

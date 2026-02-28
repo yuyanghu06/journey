@@ -6,6 +6,21 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2656ED562F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2656ED552F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt */; };
+		2656ED572F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 2656ED542F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage */; };
+		2656ED582F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 2656ED542F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage */; };
+		2656ED592F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2656ED552F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt */; };
+		2656ED5A2F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 2656ED542F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage */; };
+		2656ED5B2F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2656ED552F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt */; };
+		26A09D372F514170001E78C3 /* PersonalityModelStock.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 26A09D362F514170001E78C3 /* PersonalityModelStock.mlpackage */; };
+		26A09D382F514170001E78C3 /* PersonalityModelStock.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 26A09D362F514170001E78C3 /* PersonalityModelStock.mlpackage */; };
+		26A09D392F514170001E78C3 /* PersonalityModelStock.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 26A09D362F514170001E78C3 /* PersonalityModelStock.mlpackage */; };
+		26A09D3B2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 26A09D3A2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage */; };
+		26A09D3C2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 26A09D3A2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage */; };
+		26A09D3D2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 26A09D3A2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		263B4E0D2E56398B00EBCE8A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +42,10 @@
 		263B4DFF2E56398A00EBCE8A /* Journey App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Journey App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		263B4E0C2E56398B00EBCE8A /* Journey AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Journey AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		263B4E162E56398B00EBCE8A /* Journey AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Journey AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2656ED542F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = "all-MiniLM-L6-v2.mlpackage"; sourceTree = "<group>"; };
+		2656ED552F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "all-MiniLM-L6-v2-vocab.txt"; sourceTree = "<group>"; };
+		26A09D362F514170001E78C3 /* PersonalityModelStock.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = PersonalityModelStock.mlpackage; sourceTree = "<group>"; };
+		26A09D3A2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = PersonalityHeadUpdatable.mlpackage; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +94,7 @@
 		263B4DF62E56398A00EBCE8A = {
 			isa = PBXGroup;
 			children = (
+				26A09D352F51414F001E78C3 /* Resources */,
 				263B4E012E56398A00EBCE8A /* JourneyApp */,
 				263B4E0F2E56398B00EBCE8A /* JourneyAppTests */,
 				263B4E192E56398B00EBCE8A /* JourneyAppUITests */,
@@ -90,6 +110,17 @@
 				263B4E162E56398B00EBCE8A /* Journey AppUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		26A09D352F51414F001E78C3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				26A09D362F514170001E78C3 /* PersonalityModelStock.mlpackage */,
+				26A09D3A2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage */,
+				2656ED542F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage */,
+				2656ED552F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -212,6 +243,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2656ED5B2F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -219,6 +251,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2656ED592F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -226,6 +259,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2656ED562F521BFC0018991B /* all-MiniLM-L6-v2-vocab.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,6 +270,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2656ED5A2F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage in Sources */,
+				26A09D372F514170001E78C3 /* PersonalityModelStock.mlpackage in Sources */,
+				26A09D3B2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,6 +280,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2656ED582F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage in Sources */,
+				26A09D382F514170001E78C3 /* PersonalityModelStock.mlpackage in Sources */,
+				26A09D3C2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -250,6 +290,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				26A09D392F514170001E78C3 /* PersonalityModelStock.mlpackage in Sources */,
+				26A09D3D2F514170001E78C3 /* PersonalityHeadUpdatable.mlpackage in Sources */,
+				2656ED572F521BFC0018991B /* all-MiniLM-L6-v2.mlpackage in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

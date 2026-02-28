@@ -30,7 +30,7 @@ final class DayDetailViewModel: ObservableObject {
     init(
         dayKey: DayKey,
         journalRepository: JournalRepositoryProtocol = InMemoryJournalRepository(),
-        conversationRepository: ConversationRepositoryProtocol = InMemoryConversationRepository(),
+        conversationRepository: ConversationRepositoryProtocol = SwiftDataConversationRepository.shared,
         chatService: ChatServiceProtocol = ChatService()
     ) {
         self.dayKey                 = dayKey

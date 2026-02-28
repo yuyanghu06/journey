@@ -71,6 +71,7 @@ final class APIClient: APIClientProtocol {
     // MARK: - GET
 
     func get<Response: Decodable>(_ path: String, responseType: Response.Type) async throws -> Response {
+        print("[APIClient] GET \(path)")
         let request = try buildRequest(path: path, method: "GET", body: Optional<Data>.none, authenticated: true)
         return try await perform(request, responseType: responseType, retryOn401: true)
     }
@@ -83,6 +84,7 @@ final class APIClient: APIClientProtocol {
         responseType: Response.Type
     ) async throws -> Response {
         let bodyData = try JSONEncoder().encode(body)
+        print("[APIClient] POST \(path) — body: \(String(data: bodyData, encoding: .utf8) ?? "<binary>")")
         let request  = try buildRequest(path: path, method: "POST", body: bodyData, authenticated: true)
         return try await perform(request, responseType: responseType, retryOn401: true)
     }
@@ -95,6 +97,7 @@ final class APIClient: APIClientProtocol {
         responseType: Response.Type
     ) async throws -> Response {
         let bodyData = try JSONSerialization.data(withJSONObject: body)
+        print("[APIClient] POST (raw) \(path) — body: \(String(data: bodyData, encoding: .utf8) ?? "<binary>")")
         let request  = try buildRequest(path: path, method: "POST", body: bodyData, authenticated: true)
         return try await perform(request, responseType: responseType, retryOn401: true)
     }
@@ -107,6 +110,7 @@ final class APIClient: APIClientProtocol {
         responseType: Response.Type
     ) async throws -> Response {
         let bodyData = try JSONEncoder().encode(body)
+        print("[APIClient] POST (public) \(path) — body: \(String(data: bodyData, encoding: .utf8) ?? "<binary>")")
         let request  = try buildRequest(path: path, method: "POST", body: bodyData, authenticated: false)
         return try await perform(request, responseType: responseType, retryOn401: false)
     }
@@ -143,6 +147,13 @@ final class APIClient: APIClientProtocol {
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
+        }
+
+        let method = request.httpMethod ?? "?"
+        let url    = request.url?.absoluteString ?? "?"
+        print("[APIClient] \(method) \(url) → \(http.statusCode)")
+        if !(200...299).contains(http.statusCode) {
+            print("[APIClient] error body: \(String(data: data, encoding: .utf8) ?? "<non-utf8>")")
         }
 
         // Refresh tokens and retry once on 401

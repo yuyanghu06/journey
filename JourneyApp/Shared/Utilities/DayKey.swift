@@ -54,3 +54,12 @@ struct DayKey: RawRepresentable, Hashable, Codable, CustomStringConvertible, Exp
         return f
     }()
 }
+
+// MARK: - Comparable
+// Allows DayKey values to be sorted and range-compared using their YYYY-MM-DD string ordering.
+
+extension DayKey: Comparable {
+    static func < (lhs: DayKey, rhs: DayKey) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
+}

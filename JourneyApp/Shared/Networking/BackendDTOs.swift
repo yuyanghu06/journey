@@ -52,3 +52,34 @@ struct DayDataResponse: Decodable {
     let conversation: BackendConversationDTO
     let journalEntry: BackendJournalEntryDTO?
 }
+
+// MARK: - Personality DTOs
+
+struct PersonalityHistoryMessageDTO: Encodable {
+    let dayKey: String
+    let role: String
+    let text: String
+}
+
+struct PersonalitySendMessageRequest: Encodable {
+    let dayKey: String
+    let userText: String
+    let personalityTokens: [String]
+    let clientMessageId: String?
+    /// All messages from the last 14 days, providing the AI full conversational context.
+    let conversationHistory: [PersonalityHistoryMessageDTO]
+    /// Raw text from the user's saved memory/context documents.
+    let memories: [String]
+}
+
+struct PersonalityMessageResponse: Decodable {
+    let id: String
+    let dayKey: String
+    let role: String
+    let text: String
+    let timestamp: String
+}
+
+struct PersonalitySendMessageResponse: Decodable {
+    let assistantMessage: PersonalityMessageResponse
+}

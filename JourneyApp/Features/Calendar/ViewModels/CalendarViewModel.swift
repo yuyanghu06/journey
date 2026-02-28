@@ -42,7 +42,7 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - Init
 
     init(
-        conversationRepository: ConversationRepositoryProtocol = InMemoryConversationRepository(),
+        conversationRepository: ConversationRepositoryProtocol = SwiftDataConversationRepository.shared,
         journalRepository: JournalRepositoryProtocol = InMemoryJournalRepository()
     ) {
         self.conversationRepository = conversationRepository

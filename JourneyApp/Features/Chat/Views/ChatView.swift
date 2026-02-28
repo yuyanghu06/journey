@@ -20,7 +20,7 @@ struct ChatView: View {
             }
         }
         // Save conversation when the app goes to background
-        .onChange(of: scenePhase) { phase in
+        .onChange(of: scenePhase) { _, phase in
             if phase == .background {
                 Task { await viewModel.saveConversationAndGenerateJournal() }
             }
@@ -60,12 +60,6 @@ struct ChatView: View {
             }
 
             Spacer()
-
-            // Navigation buttons
-            NavigationLink(destination: CalendarView().environmentObject(auth)) {
-                headerIconButton(icon: "calendar")
-            }
-            .buttonStyle(.plain)
 
             NavigationLink(destination: BugView().environmentObject(auth)) {
                 headerIconButton(icon: "ladybug")
@@ -122,8 +116,8 @@ struct ChatView: View {
                 .padding(.top, DS.Spacing.sm)
             }
             .onAppear { scrollToBottom(proxy, animated: false) }
-            .onChange(of: viewModel.messages.count) { _ in scrollToBottom(proxy) }
-            .onChange(of: viewModel.isPeerTyping)   { _ in scrollToBottom(proxy) }
+            .onChange(of: viewModel.messages.count) { _, _ in scrollToBottom(proxy) }
+            .onChange(of: viewModel.isPeerTyping)   { _, _ in scrollToBottom(proxy) }
         }
     }
 

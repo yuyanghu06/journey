@@ -34,7 +34,7 @@ final class ChatViewModel: ObservableObject {
 
     init(
         chatService: ChatServiceProtocol = ChatService(),
-        conversationRepository: ConversationRepositoryProtocol = InMemoryConversationRepository(),
+        conversationRepository: ConversationRepositoryProtocol = SwiftDataConversationRepository.shared,
         journalRepository: JournalRepositoryProtocol = InMemoryJournalRepository()
     ) {
         self.chatService             = chatService

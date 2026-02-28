@@ -1,6 +1,7 @@
 # Secrets / local sensitive files
 openai-api-key.txt
 CertificateSigningRequest.certSigningRequest
+planning_markdown
 .env
 .env.*
 .github
