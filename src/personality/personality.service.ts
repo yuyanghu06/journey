@@ -25,7 +25,7 @@ export class PersonalityService {
   async sendMessage(
     dto: PersonalitySendMessageDto,
   ): Promise<{ assistantMessage: PersonalityAssistantMessage }> {
-    const { dayKey, userText, personalityTokens, conversationHistory = [], memories = [] } = dto;
+    const { dayKey, userText, personalityTokens, conversationHistory = [], memories = [], userName } = dto;
 
     // Build AI context from the client-supplied history + the new user message
     const aiMessages: AiMessage[] = [
@@ -40,6 +40,7 @@ export class PersonalityService {
       aiMessages,
       personalityTokens,
       memories,
+      userName,
     );
 
     this.logger.log(

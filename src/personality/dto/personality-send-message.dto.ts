@@ -50,4 +50,9 @@ export class PersonalitySendMessageDto {
   @IsString({ each: true })
   @IsOptional()
   memories?: string[];
+
+  /** The user's display name — injected into the personality prompt. */
+  @IsString()
+  @IsOptional()
+  userName?: string;
 }
