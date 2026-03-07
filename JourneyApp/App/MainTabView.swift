@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - MainTabView
 // Root tab container for authenticated users.
-// Chat (Today) · Past Self (Personality) · Explore (Calendar)
+// Chat (Today) · Past Self (Personality) · Explore (Calendar) · Settings
 
 struct MainTabView: View {
     @EnvironmentObject private var auth: AuthService
@@ -28,6 +28,15 @@ struct MainTabView: View {
             .environmentObject(auth)
             .tabItem {
                 Label("Explore", systemImage: "calendar")
+            }
+
+            // Tab 3 — Settings / Profile
+            NavigationStack {
+                SettingsView()
+            }
+            .environmentObject(auth)
+            .tabItem {
+                Label("Settings", systemImage: "gearshape")
             }
         }
         .tint(DS.Colors.dustyBlue)

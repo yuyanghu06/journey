@@ -222,6 +222,7 @@ final class PersonalityViewModel: ObservableObject {
     private func sendToBackend(userText: String, tokens: [String]) async -> String {
         let history  = await gatherHistoryForBackend()
         let memories = await repository.fetchContextDocuments()
+        let userName = Keychain.get(AuthKeys.userName).flatMap { String(data: $0, encoding: .utf8) }
 
         let historyDTOs = history.map {
             PersonalityHistoryMessageDTO(dayKey: $0.dayKey.rawValue, role: $0.role.rawValue, text: $0.text)
@@ -232,7 +233,8 @@ final class PersonalityViewModel: ObservableObject {
             personalityTokens:   tokens,
             clientMessageId:     UUID().uuidString,
             conversationHistory: historyDTOs,
-            memories:            memories.map(\.rawText)
+            memories:            memories.map(\.rawText),
+            userName:            userName
         )
         let response = try? await apiClient.post(
             "/personality/sendMessage",

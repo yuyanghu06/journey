@@ -46,8 +46,9 @@ enum Keychain {
 // Centralised constants for Keychain item identifiers.
 
 enum AuthKeys {
-    static let access  = "journey_access_token"
-    static let refresh = "journey_refresh_token"
-    static let userId  = "journey_user_id"
-    static let email   = "journey_user_email"
+    static let access   = "journey_access_token"
+    static let refresh  = "journey_refresh_token"
+    static let userId   = "journey_user_id"
+    static let email    = "journey_user_email"
+    static let userName = "journey_user_name"
 }

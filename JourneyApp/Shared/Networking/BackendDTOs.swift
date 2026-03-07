@@ -70,6 +70,8 @@ struct PersonalitySendMessageRequest: Encodable {
     let conversationHistory: [PersonalityHistoryMessageDTO]
     /// Raw text from the user's saved memory/context documents.
     let memories: [String]
+    /// The user's display name — injected into the personality prompt.
+    let userName: String?
 }
 
 struct PersonalityMessageResponse: Decodable {

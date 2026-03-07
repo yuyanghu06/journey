@@ -14,6 +14,7 @@ final class AuthService: ObservableObject {
     @Published private(set) var isAuthenticated: Bool = false
     @Published private(set) var email: String?
     @Published private(set) var userId: String?
+    @Published var userName: String?
 
     // MARK: - Private
 
@@ -28,6 +29,7 @@ final class AuthService: ObservableObject {
            Keychain.get(AuthKeys.access) != nil {
             self.userId          = uid
             self.email           = Keychain.get(AuthKeys.email).flatMap { String(data: $0, encoding: .utf8) }
+            self.userName        = Keychain.get(AuthKeys.userName).flatMap { String(data: $0, encoding: .utf8) }
             self.isAuthenticated = true
             startTokenRefresher()
         }
@@ -35,12 +37,13 @@ final class AuthService: ObservableObject {
 
     // MARK: - Register
 
-    func register(email: String, password: String) async throws {
-        let json = try await publicPost(
-            "/auth/register",
-            body: ["email": email, "password": password]
-        )
-        try handleAuthResponse(json)
+    func register(email: String, password: String, userName: String? = nil) async throws {
+        var body: [String: Any] = ["email": email, "password": password]
+        if let name = userName, !name.isEmpty {
+            body["userName"] = name
+        }
+        let json = try await publicPost("/auth/register", body: body)
+        try handleAuthResponse(json, providedUserName: userName)
     }
 
     // MARK: - Login
@@ -50,7 +53,7 @@ final class AuthService: ObservableObject {
             "/auth/login",
             body: ["email": email, "password": password]
         )
-        try handleAuthResponse(json)
+        try handleAuthResponse(json, providedUserName: nil)
     }
 
     // MARK: - Logout
@@ -61,6 +64,20 @@ final class AuthService: ObservableObject {
             _ = try? await publicPost("/auth/logout", body: ["refreshToken": refresh])
         }
         clearSession()
+    }
+
+    // MARK: - Profile
+
+    /// Updates the user's display name locally. Persists to Keychain.
+    func updateUserName(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            Keychain.remove(AuthKeys.userName)
+            userName = nil
+        } else {
+            Keychain.set(Data(trimmed.utf8), for: AuthKeys.userName)
+            userName = trimmed
+        }
     }
 
     // MARK: - Token Refresh
@@ -194,7 +211,7 @@ final class AuthService: ObservableObject {
     // MARK: - Helpers
 
     /// Parses a successful auth response JSON and writes tokens + user info to Keychain.
-    private func handleAuthResponse(_ json: [String: Any]) throws {
+    private func handleAuthResponse(_ json: [String: Any], providedUserName: String?) throws {
         guard
             let user   = json["user"]   as? [String: Any],
             let uid    = user["id"]     as? String,
@@ -204,6 +221,8 @@ final class AuthService: ObservableObject {
         else { throw URLError(.cannotParseResponse) }
 
         let refresh = (tokens["refreshToken"] as? String) ?? ""
+        // Use provided userName, or fall back to server-provided, or nil
+        let name = providedUserName ?? (user["userName"] as? String)
 
         Keychain.set(Data(uid.utf8),     for: AuthKeys.userId)
         Keychain.set(Data(em.utf8),      for: AuthKeys.email)
@@ -211,9 +230,13 @@ final class AuthService: ObservableObject {
         if !refresh.isEmpty {
             Keychain.set(Data(refresh.utf8), for: AuthKeys.refresh)
         }
+        if let name = name, !name.isEmpty {
+            Keychain.set(Data(name.utf8), for: AuthKeys.userName)
+        }
 
         self.userId          = uid
         self.email           = em
+        self.userName        = name
         self.isAuthenticated = true
         startTokenRefresher()
     }
@@ -224,8 +247,10 @@ final class AuthService: ObservableObject {
         Keychain.remove(AuthKeys.email)
         Keychain.remove(AuthKeys.access)
         Keychain.remove(AuthKeys.refresh)
+        Keychain.remove(AuthKeys.userName)
         userId          = nil
         email           = nil
+        userName        = nil
         isAuthenticated = false
         stopTokenRefresher()
     }

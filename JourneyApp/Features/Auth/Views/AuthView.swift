@@ -104,6 +104,7 @@ struct LoginView: View {
 struct RegisterView: View {
     @EnvironmentObject var auth: AuthService
 
+    @State private var userName = ""
     @State private var email    = ""
     @State private var password = ""
     @State private var confirm  = ""
@@ -125,7 +126,8 @@ struct RegisterView: View {
                         .foregroundColor(DS.Colors.secondary)
                         .padding(.bottom, DS.Spacing.sm)
 
-                    AuthTextField("Email",                  text: $email,    keyboardType: .emailAddress)
+                    AuthTextField("Your name", text: $userName)
+                    AuthTextField("Email",     text: $email, keyboardType: .emailAddress)
                     AuthSecureField("Password (min 8 chars)", text: $password)
                     AuthSecureField("Confirm password",       text: $confirm)
 
@@ -140,7 +142,7 @@ struct RegisterView: View {
                     AuthPrimaryButton(label: "Create Account", isLoading: isLoading) {
                         Task { await createAccount() }
                     }
-                    .disabled(email.isEmpty || password.isEmpty || confirm.isEmpty || isLoading)
+                    .disabled(userName.isEmpty || email.isEmpty || password.isEmpty || confirm.isEmpty || isLoading)
                 }
                 .padding(.horizontal, DS.Spacing.lg)
             }
@@ -155,7 +157,7 @@ struct RegisterView: View {
         isLoading = true
         error     = nil
         do {
-            try await auth.register(email: email, password: password)
+            try await auth.register(email: email, password: password, userName: userName)
         } catch let e as HTTPError {
             error = "Registration failed (\(e.status)). Please try again."
         } catch {
